@@ -10,7 +10,7 @@ Usage:
   postspec validate
 
 Running init without --agents starts an interactive Agent selector.
-After initialization, use PostSpec through conversation with the selected Agent.
+After initialization, ask the selected Agent to create or update project specs.
 `;
 
 export async function run(argv, io = console, cwd = process.cwd(), prompt = interactiveSelection) {
@@ -84,5 +84,5 @@ function formatResult(agents, generated) {
   const files = generated.length > 0
     ? generated.map((file) => `  - ${file}`).join("\n")
     : "  - 没有覆盖已有文件";
-  return `已为 ${labels} 初始化 PostSpec。\n${files}\n\n现在直接告诉 Agent：“使用 postspec 帮我实现……”。`;
+  return `已为 ${labels} 初始化 PostSpec。\n${files}\n\n现在直接告诉 Agent：“使用 postspec 建立或更新相关功能的 spec。”。`;
 }

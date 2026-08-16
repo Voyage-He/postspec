@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -18,38 +18,14 @@ test("generates selected project-level agent skills and shared scaffold", async 
   assert.ok(generated.includes(".claude/skills/postspec/SKILL.md"));
 
   const codexSkill = await readFile(path.join(cwd, ".agents/skills/postspec/SKILL.md"), "utf8");
-  const config = await readFile(path.join(cwd, "postspec/config.yaml"), "utf8");
-  assert.match(codexSkill, /Use exactly three stages/);
-  assert.match(codexSkill, /Do not introduce plan or tasks documents/);
-  assert.match(codexSkill, /Reject it when it was an incidental error/);
-  assert.match(codexSkill, /Status: approved/);
-  assert.match(codexSkill, /single implementation-stage discussion record/);
-  assert.doesNotMatch(codexSkill, /discussion\.md|implementation\.md/);
-  assert.match(codexSkill, /Do not stop at recommendations or ask for approval/);
-  assert.match(codexSkill, /Semantically merge it/);
-  assert.match(codexSkill, /zero, one, or multiple candidate specs/);
-  assert.match(codexSkill, /Solidify every candidate autonomously/);
-  assert.match(codexSkill, /candidate that passes the necessity test/);
-  assert.doesNotMatch(codexSkill, /approved candidate|wait for explicit human approval|review every candidate/);
-  assert.match(codexSkill, /Human review happens after/);
-  assert.match(codexSkill, /Treat human edits as the current authoritative draft/);
-  assert.match(codexSkill, /This is the human-review checkpoint/);
-  assert.match(codexSkill, /Archive only after the user explicitly confirms/);
-  assert.match(codexSkill, /Never archive a completed change before explicit human confirmation/);
-  assert.match(codexSkill, /without moving, deleting, or emptying the candidate file/);
-  assert.match(codexSkill, /every accepted change spec still exists and is non-empty/);
-  assert.match(codexSkill, /including its populated `specs\/` directory/);
-  assert.match(codexSkill, /Never use a filesystem move for a change spec/);
-  assert.doesNotMatch(codexSkill, /spec and archive work|complete the durable spec updates and archival autonomously/);
-  assert.match(codexSkill, /changes\/<change-name>\/specs\/<capability>\.md/);
-  assert.match(codexSkill, /Status: cancelled/);
-  assert.match(codexSkill, /does not override contradictory repository evidence/);
-  assert.match(codexSkill, /archive\/<change-name>/);
-  assert.match(config, /project: "demo"/);
-  assert.match(config, /- proposal/);
-  assert.ok(generated.includes("postspec/archive/.gitkeep"));
+  const config = await readFile(path.join(cwd, "openspec/config.yaml"), "utf8");
+  assert.equal(codexSkill, skillTemplate());
+  assert.match(config, /Project: "demo"/);
+  assert.ok(generated.includes("openspec/specs/.gitkeep"));
   assert.ok(generated.includes(".agents/skills/postspec/agents/openai.yaml"));
-  assert.ok(generated.includes(".agents/skills/postspec/assets/proposal-template.md"));
+  assert.ok(generated.includes(".agents/skills/postspec/assets/spec-template.md"));
+  assert.deepEqual((await readdir(path.join(cwd, "openspec"))).sort(), ["config.yaml", "specs"]);
+  assert.deepEqual(await readdir(path.join(cwd, ".agents/skills/postspec/assets")), ["spec-template.md"]);
   assert.deepEqual(await validateProject(cwd), []);
 });
 
@@ -60,7 +36,7 @@ test("reports incomplete or malformed Codex skill scaffolds", async () => {
 
   const issues = await validateProject(cwd);
   assert.ok(issues.some((issue) => issue.includes("frontmatter")));
-  assert.ok(issues.some((issue) => issue.includes("proposal-template.md")));
+  assert.ok(issues.some((issue) => issue.includes("spec-template.md")));
 });
 
 test("does not overwrite an existing skill unless force is enabled", async () => {
@@ -97,4 +73,21 @@ test("runs Codex validation through the CLI and rejects unknown options", async 
   assert.equal(output.at(-1), "Codex PostSpec 校验通过");
   await assert.rejects(run(["validate", "--unknown"], io, cwd), /不支持的选项/);
   await assert.rejects(run(["init", "extra", "--agents", "codex"], io, cwd), /不支持的位置参数/);
+});
+
+test("force refresh preserves existing specs and other user documents", async () => {
+  const cwd = await fixture();
+  await initProject(cwd, ["codex"]);
+  const files = ["openspec/specs/login/spec.md", "docs/notes.md"];
+  for (const file of files) {
+    await mkdir(path.dirname(path.join(cwd, file)), { recursive: true });
+    await writeFile(path.join(cwd, file), "user content");
+  }
+  await writeFile(path.join(cwd, ".agents/skills/postspec/SKILL.md"), "custom skill");
+  await writeFile(path.join(cwd, "openspec/config.yaml"), "schema: custom\ncontext: preserved\n");
+  await initProject(cwd, ["codex"], { force: true, projectName: "demo" });
+  assert.equal(await readFile(path.join(cwd, ".agents/skills/postspec/SKILL.md"), "utf8"), skillTemplate());
+  assert.equal(await readFile(path.join(cwd, "openspec/config.yaml"), "utf8"), 'schema: custom\ncontext: preserved\n');
+  for (const file of files) assert.equal(await readFile(path.join(cwd, file), "utf8"), "user content");
+  assert.deepEqual(await validateProject(cwd), []);
 });

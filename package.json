@@ -1,7 +1,7 @@
 {
   "name": "postspec",
   "version": "0.1.0",
-  "description": "Initialize a lightweight three-stage SDD skill for coding agents",
+  "description": "Initialize an agent skill that automatically creates and updates project specs",
   "type": "module",
   "bin": {
     "postspec": "./bin/postspec.js"
