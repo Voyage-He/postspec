@@ -1,0 +1,6 @@
+interface:
+  display_name: "PostSpec"
+  short_description: "Automatically create and update project specs"
+  default_prompt: "Use $postspec to create or update specs for the relevant capabilities based on current code, tests, and my feedback."
+policy:
+  allow_implicit_invocation: true

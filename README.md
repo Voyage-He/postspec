@@ -1,55 +1,50 @@
 # PostSpec
 
-PostSpec 为 AI 编程 Agent 安装自动建立、修改 Spec 的能力。Agent 根据当前代码、测试和用户反馈，直接维护 `openspec/specs/` 中的功能规范；代码变化时同步更新相关 Spec，也可以单独为已有项目补充文档。
+PostSpec 是一个纯 Agent Skill：让 AI 编程 Agent 根据当前代码、测试和用户反馈，直接建立和维护 `openspec/specs/` 中的功能规范。代码变化时同步更新相关 Spec，也可以单独为已有项目补充文档。
 
-## 初始化
+无需 Node.js、npm 或 CLI。安装后直接与 Agent 对话。
 
-需要 Node.js 20 或以上。在本仓库目录注册命令：
+## 安装
 
-```bash
-npm link
-```
-
-然后进入需要维护 Spec 的目标项目：
-
-```bash
-cd /path/to/your-project
-postspec init --agents codex
-```
-
-运行 `postspec init` 可交互选择 Agent；也可以通过逗号分隔同时指定多个：
-
-```bash
-postspec init --agents codex,claude,cursor,gemini
-```
-
-| Agent | Skill 路径 |
-| --- | --- |
-| Codex | `.agents/skills/postspec/SKILL.md` |
-| Claude Code | `.claude/skills/postspec/SKILL.md` |
-| Cursor | `.cursor/skills/postspec/SKILL.md` |
-| Gemini CLI | `.gemini/skills/postspec/SKILL.md` |
-
-初始化会生成 Skill、Spec 模板和以下基础目录及配置。具体 Spec 由 Agent 创建：
+本仓库根目录就是 Skill 源目录：
 
 ```text
-openspec/
-├── config.yaml
-└── specs/
-    └── <capability>/
-        └── spec.md
+postspec/
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+└── assets/
+    └── spec-template.md
 ```
+
+将 `SKILL.md`、`agents/` 和 `assets/` 复制到目标项目的 Skill 目录。以下示例在本仓库目录执行，为 Codex 安装：
+
+```bash
+mkdir -p /path/to/your-project/.agents/skills/postspec
+cp -R SKILL.md agents assets /path/to/your-project/.agents/skills/postspec/
+```
+
+其他 Agent 可使用对应目录：
+
+| Agent | 目标项目中的 Skill 目录 |
+| --- | --- |
+| Codex | `.agents/skills/postspec/` |
+| Claude Code | `.claude/skills/postspec/` |
+| Cursor | `.cursor/skills/postspec/` |
+| Gemini CLI | `.gemini/skills/postspec/` |
+
+`agents/openai.yaml` 提供 Codex 的展示信息和调用策略。其他 Agent 是否加载 Skill 取决于其自身支持，尚未验证行为一致性。
 
 ## 使用
 
-在目标项目中直接与 Agent 对话：
+在目标项目中让 Agent 使用 PostSpec，例如：
 
 ```text
 使用 postspec，为现有登录功能建立 spec。
 ```
 
 ```text
-使用 postspec，为 Passkey 登录建立 spec。
+修改登录逻辑，并使用 postspec 同步相关 spec。
 ```
 
 ```text
@@ -57,34 +52,24 @@ openspec/
 ```
 
 ```text
-我修改了登录 spec，请结合我的修改和当前代码补充边界条件。
+使用 postspec，结合我对登录 spec 的修改和当前代码补充边界条件。
 ```
 
-Agent 会自动判断受影响的能力：新能力建立 Spec，已有能力直接做语义更新。Spec 记录当前行为、约束、不变量和有长期价值的决策，按能力组织文档。更新前读取磁盘上的最新内容，保留无关人工修改；未实现的功能不会写成已实现的事实。
+Agent 会按需创建目录，规范按能力组织：
 
-全部规范直接写入 `openspec/specs/`。初始化安装的是 Agent 指令，不是后台文件监听器；自动维护发生在 Agent 执行相关任务时。
-
-## 校验与更新
-
-Codex 的生成结构可本地校验：
-
-```bash
-postspec validate
+```text
+openspec/
+└── specs/
+    └── login/
+        └── spec.md
 ```
 
-该命令检查目录、Skill 元数据和模板引用，不验证 Spec 内容或 Agent 的实际行为。其他 Agent 目前仅生成兼容目录，尚未验证行为一致性。
+Spec 记录当前行为、约束、不变量和有长期价值的决策。更新前读取磁盘上的最新内容，保留无关人工修改；未实现的功能不会写成已实现的事实。仅请求文档时，修改范围为规范文档。
 
-重复初始化默认保留已有文件。刷新 Skill 时执行：
+不需要预先初始化目录或创建 `openspec/config.yaml`；已有配置保持不变。自动维护发生在 Agent 使用此 Skill 执行相关任务时，没有后台文件监听器。
 
-```bash
-postspec init --agents codex --force
-```
+## 更新与旧版迁移
 
-`--force` 会刷新所选 Agent 的 Skill 和模板。已有 `openspec/config.yaml`、Spec 和其他用户文件保留。
+更新时将新版 `SKILL.md`、`agents/` 和 `assets/` 复制到原 Skill 目录。复制会替换同名 Skill 文件；如果曾手动修改这些文件，请先合并需要保留的内容。项目的 `openspec/specs/` 和已有配置不受影响。
 
-## 开发校验
-
-```bash
-npm test
-npm run lint
-```
+旧版 CLI 已移除，原有 Spec 可以继续使用。曾通过 `npm link` 注册命令的用户，可运行 `npm uninstall -g postspec` 移除旧的全局链接，再按上面的步骤安装 Skill。此清理仅针对旧版安装，新版无需 npm。
