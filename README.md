@@ -2,7 +2,7 @@
 
 PostSpec 是一个纯 Agent Skill：让 AI 编程 Agent 根据当前代码、测试和用户反馈，直接建立和维护 `openspec/specs/` 中的功能规范。代码变化时同步更新相关 Spec，也可以单独为已有项目补充文档。
 
-无需 Node.js、npm 或 CLI。安装后直接与 Agent 对话。
+Skill 运行无需 Node.js、npm 或 CLI。可通过复制文件或 npm 获取，安装后直接与 Agent 对话。
 
 ## 安装
 
@@ -23,6 +23,16 @@ postspec/
 mkdir -p /path/to/your-project/.agents/skills/postspec
 cp -R SKILL.md agents assets /path/to/your-project/.agents/skills/postspec/
 ```
+
+也可以在目标项目中通过 npm 获取 Skill，再复制到 Agent 的 Skill 目录：
+
+```bash
+npm install --save-dev postspec
+mkdir -p .agents/skills/postspec
+cp -R node_modules/postspec/SKILL.md node_modules/postspec/agents node_modules/postspec/assets .agents/skills/postspec/
+```
+
+npm 包只分发 Skill 文件，不提供命令或安装脚本。安装 npm 包后仍需复制文件，让 Agent 发现 Skill；更新 npm 包后也需重新复制。
 
 其他 Agent 可使用对应目录：
 

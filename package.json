@@ -1,0 +1,24 @@
+{
+  "name": "postspec",
+  "version": "0.1.0",
+  "description": "An agent skill for creating and maintaining project specs from code, tests, and feedback",
+  "files": [
+    "SKILL.md",
+    "agents/openai.yaml",
+    "assets/spec-template.md"
+  ],
+  "keywords": ["agent-skill", "specification", "documentation", "codex"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voyage-He/postspec.git"
+  },
+  "homepage": "https://github.com/Voyage-He/postspec#readme",
+  "bugs": {
+    "url": "https://github.com/Voyage-He/postspec/issues"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
